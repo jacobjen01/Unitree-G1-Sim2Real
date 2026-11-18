@@ -195,6 +195,8 @@ class WholeBodyRL {
   std::unique_ptr<Ort::Session> session_;
   Ort::AllocatorWithDefaultOptions allocator_;
 
+  std::string input_name_;
+  std::string output_name_;
   std::vector<const char*> input_names;
   std::vector<Ort::Value> input_tensors;
   std::vector<const char*> output_names;

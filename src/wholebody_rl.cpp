@@ -304,12 +304,12 @@ void WholeBodyRL::LoadOnnxModel()
   session_ = std::make_unique<Ort::Session>(env_, cfg.policy_path.c_str(), session_options);
 
   // Prepare input/output names
-  const char* input_name = session_->GetInputName(0, allocator_);
-  const char* output_name = session_->GetOutputName(0, allocator_);
+  input_name_ = session_->GetInputNameAllocated(0, allocator_).get();
+  output_name_ = session_->GetOutputNameAllocated(0, allocator_).get();
 
   // input/output names
-  input_names = {input_name};
-  output_names = {output_name};
+  input_names = {input_name_.c_str()};
+  output_names = {output_name_.c_str()};
 }
 
 
