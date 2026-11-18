@@ -19,8 +19,6 @@ set(UNITREE_SDK2_DIR    ${CMAKE_SOURCE_DIR}/../unitree_sdk2)
 
 set(THIRD_PARTY_DIR     ${CMAKE_SOURCE_DIR}/thirdparty)
 set(YAML_CPP_SRC_DIR    ${THIRD_PARTY_DIR}/yaml-cpp)
-set(ONNXRUNTIME_ROOT    ${THIRD_PARTY_DIR}/onnxruntime)
-set(ONNXRUNTIME_LIB_DIR ${ONNXRUNTIME_ROOT}/build/Release)
 
 # ==== Unitree SDK2 ====
 if (CMAKE_SYSTEM_PROCESSOR MATCHES "x86_64")
@@ -43,24 +41,34 @@ if (NOT EXISTS "${YAML_CPP_SRC_DIR}/CMakeLists.txt")
 endif()
 add_subdirectory(${YAML_CPP_SRC_DIR})
 
-# ==== ONNXRUNTIME ====
-find_library(ONNXRUNTIME_LIB
-  NAMES onnxruntime
-  HINTS ${ONNXRUNTIME_LIB_DIR}
-  NO_DEFAULT_PATH
-)
-if (NOT ONNXRUNTIME_LIB)
-  message(FATAL_ERROR "onnxruntime not found in: ${ONNXRUNTIME_LIB_DIR}")
+# ==== ONNXRUNTIME (prebuilt, from NuGet) ====
+set(ORT_VERSION 1.22.0)
+set(ORT_DIR ${CMAKE_BINARY_DIR}/onnxruntime-${ORT_VERSION})
+if (CMAKE_SYSTEM_PROCESSOR MATCHES "x86_64")
+  set(ORT_RID linux-x64)
+else()
+  set(ORT_RID linux-arm64)
+endif()
+set(ORT_LIB_DIR ${ORT_DIR}/runtimes/${ORT_RID}/native)
+
+if (NOT EXISTS ${ORT_LIB_DIR}/libonnxruntime.so)
+  file(DOWNLOAD
+    https://api.nuget.org/v3-flatcontainer/microsoft.ml.onnxruntime/${ORT_VERSION}/microsoft.ml.onnxruntime.${ORT_VERSION}.nupkg
+    ${CMAKE_BINARY_DIR}/onnxruntime.nupkg SHOW_PROGRESS STATUS ORT_DL)
+  list(GET ORT_DL 0 ORT_DL_CODE)
+  if (NOT ORT_DL_CODE EQUAL 0)
+    message(FATAL_ERROR "onnxruntime download failed: ${ORT_DL}")
+  endif()
+  file(ARCHIVE_EXTRACT INPUT ${CMAKE_BINARY_DIR}/onnxruntime.nupkg DESTINATION ${ORT_DIR})
+  # soname is libonnxruntime.so.1; needed at runtime
+  file(CREATE_LINK libonnxruntime.so ${ORT_LIB_DIR}/libonnxruntime.so.1 SYMBOLIC)
 endif()
 
 add_library(onnxruntime SHARED IMPORTED)
 set_target_properties(onnxruntime PROPERTIES
-  IMPORTED_LOCATION "${ONNXRUNTIME_LIB}"
+  IMPORTED_LOCATION "${ORT_LIB_DIR}/libonnxruntime.so"
 )
-target_include_directories(onnxruntime INTERFACE
-  "${ONNXRUNTIME_ROOT}/include"
-  "${ONNXRUNTIME_ROOT}/include/onnxruntime/core/session"
-)
+target_include_directories(onnxruntime INTERFACE "${ORT_DIR}/build/native/include")
 
 # ==== Common Deps ====
 add_library(com_deps INTERFACE)

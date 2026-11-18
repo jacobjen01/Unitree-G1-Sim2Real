@@ -32,21 +32,6 @@ make -j$(nproc)
 git clone --recursive  https://github.com/S-CHOI-S/Unitree-G1-Sim2Real.git g1_sim2real
 git submodule update --init --recursive
 ```
-
-**Step 3.** Build submodule #1: `onnxruntime`
-
-```
-cd thirdparty/onnxruntime
-./build.sh --config Release --build_shared_lib --parallel --update --build --build_dir build --enable_pybind --disable_ml_ops
-```
-
-**Step 4.** Build submodule #2: `yaml-cpp`
-```
-cd thirdparty/yaml-cpp
-mkdir build && cd build
-cmake .. -DYAML_BUILD_SHARED_LIBS=ON
-make -j$(nproc)
-```
 </br>
 
 ## Usage
