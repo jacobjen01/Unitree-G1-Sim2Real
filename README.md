@@ -29,8 +29,8 @@ make -j$(nproc)
 **Step 2.** Clone the `g1_sim2real` repository
 
 ```
-git clone --recursive  https://github.com/S-CHOI-S/Unitree-G1-Sim2Real.git g1_sim2real
-git submodule update --init --recursive
+git clone --recursive git@github.com:jacobjen01/Unitree-G1-Sim2Real.git ~/g1_sim2real
+cd ~/g1_sim2real && mkdir build && cd build && cmake .. && make -j$(nproc)
 ```
 </br>
 
